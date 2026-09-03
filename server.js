@@ -1,0 +1,150 @@
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./src/config/db');
+const { errorHandler } = require('./src/middlewares/errorMiddleware');
+
+// Load environment variables
+dotenv.config();
+
+// Connect to Database
+connectDB();
+
+const app = express();
+
+// Standard Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Basic Status Route
+app.get('/api/status', (req, res) => {
+  res.json({ status: 'success', message: 'ERP Global Backend API is running smoothly' });
+});
+
+// Auth Routes
+const authRoutes = require('./src/routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
+// Product Routes
+const productRoutes = require('./src/routes/productRoutes');
+app.use('/api/products', productRoutes);
+
+// Sales Routes
+const saleRoutes = require('./src/routes/saleRoutes');
+app.use('/api/sales', saleRoutes);
+
+// Purchase Routes
+const purchaseRoutes = require('./src/routes/purchaseRoutes');
+app.use('/api/purchases', purchaseRoutes);
+
+// Account Routes
+const accountRoutes = require('./src/routes/accountRoutes');
+app.use('/api/accounts', accountRoutes);
+
+// Debit Note Routes
+const debitNoteRoutes = require('./src/routes/debitNoteRoutes');
+app.use('/api/debit-notes', debitNoteRoutes);
+
+// Credit Note Routes
+const creditNoteRoutes = require('./src/routes/creditNoteRoutes');
+app.use('/api/credit-notes', creditNoteRoutes);
+
+// Clearance Routes
+const clearanceRoutes = require('./src/routes/clearanceRoutes');
+app.use('/api/clearances', clearanceRoutes);
+
+// Bank Payment Routes
+const bankPaymentRoutes = require('./src/routes/bankPaymentRoutes');
+app.use('/api/payments', bankPaymentRoutes);
+
+// Contra Entry Routes
+const contraEntryRoutes = require('./src/routes/contraEntryRoutes');
+app.use('/api/contra-entries', contraEntryRoutes);
+
+// Journal Voucher Routes
+const journalVoucherRoutes = require('./src/routes/journalVoucherRoutes');
+app.use('/api/journal-vouchers', journalVoucherRoutes);
+
+// Stock Entry Routes
+const stockEntryRoutes = require('./src/routes/stockEntryRoutes');
+app.use('/api/stock-entries', stockEntryRoutes);
+
+// Stock Transfer Routes
+const stockTransferRoutes = require('./src/routes/stockTransferRoutes');
+app.use('/api/stock-transfers', stockTransferRoutes);
+
+// HRMS Routes
+const hrmsRoutes = require('./src/routes/hrmsRoutes');
+app.use('/api/hrms', hrmsRoutes);
+
+// Employee Routes
+const employeeRoutes = require('./src/routes/employeeRoutes');
+app.use('/api/employees', employeeRoutes);
+
+// Expense Claim Routes
+const expenseClaimRoutes = require('./src/routes/expenseClaimRoutes');
+app.use('/api/expenses', expenseClaimRoutes);
+
+// Performance Rating Routes
+const performanceRatingRoutes = require('./src/routes/performanceRatingRoutes');
+app.use('/api/performance', performanceRatingRoutes);
+
+// Employee Target Routes
+const employeeTargetRoutes = require('./src/routes/employeeTargetRoutes');
+app.use('/api/targets', employeeTargetRoutes);
+
+// Department Routes
+const departmentRoutes = require('./src/routes/departmentRoutes');
+app.use('/api/departments', departmentRoutes);
+
+// Designation Routes
+const designationRoutes = require('./src/routes/designationRoutes');
+app.use('/api/designations', designationRoutes);
+
+// Customer Routes
+const customerRoutes = require('./src/routes/customerRoutes');
+app.use('/api/customers', customerRoutes);
+
+// Supplier Routes
+const supplierRoutes = require('./src/routes/supplierRoutes');
+app.use('/api/suppliers', supplierRoutes);
+
+// Unit Routes
+const unitRoutes = require('./src/routes/unitRoutes');
+app.use('/api/units', unitRoutes);
+
+// Stock Count Routes
+const stockCountRoutes = require('./src/routes/stockCountRoutes');
+app.use('/api/stock-counts', stockCountRoutes);
+
+// Price List Routes
+const priceListRoutes = require('./src/routes/priceListRoutes');
+app.use('/api/price-lists', priceListRoutes);
+
+// Price Rule Routes
+const priceRuleRoutes = require('./src/routes/priceRuleRoutes');
+app.use('/api/price-rules', priceRuleRoutes);
+
+// Tax Slab Routes
+const taxSlabRoutes = require('./src/routes/taxSlabRoutes');
+app.use('/api/tax-slabs', taxSlabRoutes);
+
+// HSN Mapping Routes
+const hsnMappingRoutes = require('./src/routes/hsnMappingRoutes');
+app.use('/api/hsn-mappings', hsnMappingRoutes);
+
+// Branch Routes
+const branchRoutes = require('./src/routes/branchRoutes');
+app.use('/api/branches', branchRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
+
+module.exports = app;
