@@ -28,7 +28,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }
+  company: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+  department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
+  designation: { type: mongoose.Schema.Types.ObjectId, ref: 'Designation' },
+  salaryStructure: { type: mongoose.Schema.Types.ObjectId, ref: 'SalaryStructure' },
+  uanNumber: { type: String, trim: true },
+  esiIpNumber: { type: String, trim: true }
 }, { timestamps: true });
 
 // Hash password before saving using async/await (Mongoose async hooks don't require next if returned)
