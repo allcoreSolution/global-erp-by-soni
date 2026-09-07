@@ -147,10 +147,92 @@ const deleteSale = async (req, res, next) => {
   }
 };
 
+// --- COUPON CRUD OPERATIONS ---
+
+// @desc    Create a new coupon
+// @route   POST /api/sales/coupon
+// @access  Private
+const createCoupon = async (req, res, next) => {
+  try {
+    const coupon = await Coupon.create({ ...req.body, company: req.user?.companyId });
+    res.status(201).json({ success: true, data: coupon });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all coupons
+// @route   GET /api/sales/coupon
+// @access  Private
+const getCoupons = async (req, res, next) => {
+  try {
+    const coupons = await Coupon.find({ company: req.user?.companyId });
+    res.json({ success: true, data: coupons });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get coupon by ID
+// @route   GET /api/sales/coupon/:id
+// @access  Private
+const getCouponById = async (req, res, next) => {
+  try {
+    const coupon = await Coupon.findById(req.params.id);
+    if (!coupon) {
+      res.status(404);
+      return next(new Error('Coupon not found'));
+    }
+    res.json({ success: true, data: coupon });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update coupon
+// @route   PUT /api/sales/coupon/:id
+// @access  Private
+const updateCoupon = async (req, res, next) => {
+  try {
+    const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true
+    });
+    if (!coupon) {
+      res.status(404);
+      return next(new Error('Coupon not found'));
+    }
+    res.json({ success: true, data: coupon });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete coupon
+// @route   DELETE /api/sales/coupon/:id
+// @access  Private
+const deleteCoupon = async (req, res, next) => {
+  try {
+    const coupon = await Coupon.findByIdAndDelete(req.params.id);
+    if (!coupon) {
+      res.status(404);
+      return next(new Error('Coupon not found'));
+    }
+    res.json({ success: true, message: 'Coupon deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createSale,
   getSales,
   updateSale,
   deleteSale,
-  validateCoupon
+  validateCoupon,
+  createCoupon,
+  getCoupons,
+  getCouponById,
+  updateCoupon,
+  deleteCoupon
 };

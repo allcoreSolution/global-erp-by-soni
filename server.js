@@ -26,6 +26,10 @@ app.get('/api/status', (req, res) => {
 const authRoutes = require('./src/routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+// SaaS Company Management Routes (SuperAdmin)
+const companyRoutes = require('./src/routes/companyRoutes');
+app.use('/api/companies', companyRoutes);
+
 // Product Routes
 const productRoutes = require('./src/routes/productRoutes');
 app.use('/api/products', productRoutes);
