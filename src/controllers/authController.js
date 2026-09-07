@@ -60,15 +60,39 @@ const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({ email }).populate('role');
+    const user = await User.findOne({ email }).populate('role').populate('company');
 
     if (user && (await user.comparePassword(password))) {
+      
+      if (!user.isActive) {
+        res.status(403);
+        throw new Error('Your account is deactivated');
+      }
+
+      // Check Company Subscription Expiry
+      if (user.company && user.role?.name !== 'SuperAdmin') {
+        const company = user.company;
+        if (company.subscriptionStatus === 'Suspended') {
+          res.status(403);
+          throw new Error('Your company account is suspended. Please contact support.');
+        }
+        if (company.subscriptionExpiry && new Date(company.subscriptionExpiry) < new Date()) {
+          res.status(403);
+          throw new Error('Subscription Expired. Please ask your administrator to renew the plan.');
+        }
+      }
+
       res.json({
         _id: user._id,
         username: user.username,
         email: user.email,
         role: user.role.name,
         permissions: user.role.permissions,
+        company: user.company ? {
+          name: user.company.name,
+          logoUrl: user.company.logoUrl,
+          themeColor: user.company.themeColor
+        } : null,
         token: generateToken(user._id)
       });
     } else {
@@ -84,12 +108,18 @@ const loginUser = async (req, res, next) => {
 // @route   GET /api/auth/profile
 // @access  Private
 const getUserProfile = async (req, res) => {
+  const user = await User.findById(req.user._id).populate('company');
   res.json({
     _id: req.user._id,
     username: req.user.username,
     email: req.user.email,
     role: req.user.role.name,
-    permissions: req.user.role.permissions
+    permissions: req.user.role.permissions,
+    company: user.company ? {
+      name: user.company.name,
+      logoUrl: user.company.logoUrl,
+      themeColor: user.company.themeColor
+    } : null
   });
 };
 

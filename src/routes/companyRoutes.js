@@ -1,13 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { protect, checkPermission } = require('../middlewares/authMiddleware');
-const { registerCompany, getCompanies, toggleCompanyStatus } = require('../controllers/companyController');
+const { protect } = require('../middlewares/authMiddleware');
+const { 
+  registerCompany, 
+  getCompanies, 
+  toggleCompanyStatus, 
+  updateSubscription, 
+  getMyCompanyProfile, 
+  updateCompanyProfile
+} = require('../controllers/companyController');
 
-// All company routes are strictly for SuperAdmin
-// Since checkPermission('manage_companies') will pass for SuperAdmin automatically
-router.use(protect);
-
-// Allow only SuperAdmin (checking a specific permission they have, or simply writing a middleware)
+// Middleware for SuperAdmin
 const superAdminOnly = (req, res, next) => {
   if (req.user && req.user.role && req.user.role.name === 'SuperAdmin') {
     return next();
@@ -16,10 +19,16 @@ const superAdminOnly = (req, res, next) => {
   next(new Error('Not authorized. Super Admin only.'));
 };
 
-router.use(superAdminOnly);
+router.use(protect);
 
-router.post('/register', registerCompany);
-router.get('/', getCompanies);
-router.put('/:id/toggle-status', toggleCompanyStatus);
+// Company Admin Routes (accessible by the logged in user of the company)
+router.get('/profile', getMyCompanyProfile);
+router.put('/profile', updateCompanyProfile);
+
+// Super Admin Routes
+router.post('/register', superAdminOnly, registerCompany);
+router.get('/', superAdminOnly, getCompanies);
+router.put('/:id/toggle-status', superAdminOnly, toggleCompanyStatus);
+router.put('/:id/subscription', superAdminOnly, updateSubscription);
 
 module.exports = router;

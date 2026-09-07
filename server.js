@@ -3,6 +3,12 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./src/config/db');
 const { errorHandler } = require('./src/middlewares/errorMiddleware');
+const mongoose = require('mongoose');
+const tenantPlugin = require('./src/plugins/tenantPlugin');
+const { tenantContextMiddleware } = require('./src/middlewares/tenantContext');
+
+// Apply Mongoose Tenant Isolation Plugin Globally
+mongoose.plugin(tenantPlugin);
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +23,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Setup AsyncLocalStorage for Tenant Isolation
+app.use(tenantContextMiddleware);
+
 // Basic Status Route
 app.get('/api/status', (req, res) => {
   res.json({ status: 'success', message: 'ERP Global Backend API is running smoothly' });
@@ -29,6 +38,17 @@ app.use('/api/auth', authRoutes);
 // SaaS Company Management Routes (SuperAdmin)
 const companyRoutes = require('./src/routes/companyRoutes');
 app.use('/api/companies', companyRoutes);
+
+// SaaS Plan Management Routes (SuperAdmin)
+const planRoutes = require('./src/routes/planRoutes');
+app.use('/api/plans', planRoutes);
+
+// Company Level User & Role Management Routes
+const userRoutes = require('./src/routes/userRoutes');
+app.use('/api/users', userRoutes);
+
+const roleRoutes = require('./src/routes/roleRoutes');
+app.use('/api/roles', roleRoutes);
 
 // Product Routes
 const productRoutes = require('./src/routes/productRoutes');
@@ -190,6 +210,10 @@ app.use('/api/hsn-mappings', hsnMappingRoutes);
 // Branch Routes
 const branchRoutes = require('./src/routes/branchRoutes');
 app.use('/api/branches', branchRoutes);
+
+// Dashboard Analytics Routes
+const dashboardRoutes = require('./src/routes/dashboardRoutes');
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

@@ -6,7 +6,7 @@ const Role = require('../models/Role');
 // @route   POST /api/companies/register
 // @access  Private/SuperAdmin
 const registerCompany = async (req, res, next) => {
-  const { companyName, companyEmail, companyPhone, companyAddress, adminEmail, adminPassword } = req.body;
+  const { companyName, companyEmail, companyPhone, companyAddress, adminEmail, adminPassword, subscriptionPlan, subscriptionExpiry } = req.body;
 
   try {
     // Check if company email already exists
@@ -28,7 +28,9 @@ const registerCompany = async (req, res, next) => {
       name: companyName,
       email: companyEmail,
       phone: companyPhone,
-      address: companyAddress
+      address: companyAddress,
+      subscriptionPlan: subscriptionPlan || null,
+      subscriptionExpiry: subscriptionExpiry ? new Date(subscriptionExpiry) : null
     });
 
     // Ensure Admin Role exists
@@ -70,7 +72,7 @@ const registerCompany = async (req, res, next) => {
 // @access  Private/SuperAdmin
 const getCompanies = async (req, res, next) => {
   try {
-    const companies = await Company.find({}).sort({ createdAt: -1 });
+    const companies = await Company.find({}).populate('subscriptionPlan').sort({ createdAt: -1 });
     
     // Attach admin info to each company
     const companiesWithAdmin = await Promise.all(companies.map(async (company) => {
@@ -113,8 +115,78 @@ const toggleCompanyStatus = async (req, res, next) => {
   }
 };
 
+// @desc    Update company subscription
+// @route   PUT /api/companies/:id/subscription
+// @access  Private/SuperAdmin
+const updateSubscription = async (req, res, next) => {
+  try {
+    const { subscriptionPlan, subscriptionExpiry, subscriptionStatus } = req.body;
+    const company = await Company.findById(req.params.id);
+
+    if (!company) {
+      res.status(404);
+      return next(new Error('Company not found'));
+    }
+
+    if (subscriptionPlan !== undefined) company.subscriptionPlan = subscriptionPlan;
+    if (subscriptionExpiry !== undefined) company.subscriptionExpiry = new Date(subscriptionExpiry);
+    if (subscriptionStatus !== undefined) company.subscriptionStatus = subscriptionStatus;
+
+    await company.save();
+    res.json({ message: 'Subscription updated successfully', company });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get the logged-in user's company profile
+// @route   GET /api/companies/profile
+// @access  Private (Admins or any user)
+const getMyCompanyProfile = async (req, res, next) => {
+  try {
+    const company = await Company.findById(req.user.company);
+    if (!company) {
+      res.status(404);
+      throw new Error('Company not found');
+    }
+    res.json(company);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update the logged-in user's company profile (including logo and theme)
+// @route   PUT /api/companies/profile
+// @access  Private (Admins only)
+const updateCompanyProfile = async (req, res, next) => {
+  try {
+    const { name, phone, address, gstNumber, logoUrl, themeColor } = req.body;
+    
+    const company = await Company.findById(req.user.company);
+    if (!company) {
+      res.status(404);
+      throw new Error('Company not found');
+    }
+
+    if (name) company.name = name;
+    if (phone) company.phone = phone;
+    if (address) company.address = address;
+    if (gstNumber) company.gstNumber = gstNumber;
+    if (logoUrl !== undefined) company.logoUrl = logoUrl;
+    if (themeColor !== undefined) company.themeColor = themeColor;
+
+    const updatedCompany = await company.save();
+    res.json(updatedCompany);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerCompany,
   getCompanies,
-  toggleCompanyStatus
+  toggleCompanyStatus,
+  updateSubscription,
+  getMyCompanyProfile,
+  updateCompanyProfile
 };

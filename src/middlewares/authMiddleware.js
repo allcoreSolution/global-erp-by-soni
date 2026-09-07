@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Role = require('../models/Role');
+const { setContext } = require('./tenantContext');
 
 const protect = async (req, res, next) => {
   let token;
@@ -24,6 +25,14 @@ const protect = async (req, res, next) => {
       if (!req.user.isActive) {
         res.status(403);
         return next(new Error('User account is deactivated'));
+      }
+
+      // Set context for tenant isolation
+      if (req.user.company) {
+        setContext('companyId', req.user.company);
+      }
+      if (req.user.role) {
+        setContext('roleName', req.user.role.name);
       }
 
       next();
@@ -69,4 +78,12 @@ const checkPermission = (permission) => {
   };
 };
 
-module.exports = { protect, checkPermission };
+const superAdminOnly = (req, res, next) => {
+  if (req.user && req.user.role && req.user.role.name === 'SuperAdmin') {
+    return next();
+  }
+  res.status(403);
+  next(new Error('Not authorized. Super Admin only.'));
+};
+
+module.exports = { protect, checkPermission, superAdminOnly };
