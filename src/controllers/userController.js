@@ -6,7 +6,10 @@ const Role = require('../models/Role');
 // @access  Private
 const getUsers = async (req, res, next) => {
   try {
-    const users = await User.find({}).populate('role').sort({ createdAt: -1 });
+  const users = await User.find({})
+ .select('-password')
+  .populate('role')
+  .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     next(error);
@@ -32,15 +35,17 @@ const createUser = async (req, res, next) => {
       throw new Error('Role not found');
     }
 
-    const user = await User.create({
-      username,
+  const user = await User.create({
+  username,
       email,
       password,
       role: role._id,
       branch: branch || 'HO'
     });
 
-    const populatedUser = await User.findById(user._id).populate('role');
+const populatedUser = await User.findById(user._id)
+  .select('-password')
+  .populate('role');
     res.status(201).json(populatedUser);
   } catch (error) {
     next(error);
@@ -61,7 +66,13 @@ const toggleUserStatus = async (req, res, next) => {
     user.isActive = !user.isActive;
     await user.save();
 
-    res.json({ message: `User status changed to ${user.isActive ? 'Active' : 'Inactive'}`, user });
+    const userResponse = user.toObject();
+delete userResponse.password;
+
+res.json({
+  message: `User status changed to ${user.isActive ? 'Active' : 'Inactive'}`,
+  user: userResponse
+});
   } catch (error) {
     next(error);
   }
